@@ -1,0 +1,13 @@
+{
+  "name": "example2env",
+  "version": "0.1.0",
+  "description": "A .env file generator using .env.example as template",
+  "main": "index.js",
+  "repository": "https://github.com/devgar/example2env",
+  "author": "Edgar Albalate <dev.gardo@gmail.com>",
+  "license": "MIT",
+  "dependencies": {
+    "inquirer": "^7.1.0",
+    "yargs": "^15.3.1"
+  }
+}
