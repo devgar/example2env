@@ -2,7 +2,7 @@
 
 'use strict';
 
-const { readFileSync } = require('fs')
+const { readFileSync, writeFileSync } = require('fs')
 
 const inquirer = require('inquirer')
 
@@ -64,8 +64,12 @@ const questionize = ({ name, value, params }) => params
   ? paramissedQuestionize({ name, value, params })
   : { name, message: `${name}:`, default: defaultize(name, value), validate }
 
-const file_text = readFileSync('.env.example', 'utf-8')
-const lines = file_text.split('\n')
+const renderData = (ans) =>
+  Object.entries(ans).map(([key, val]) => `${key}=${val}`).filter(l => !l.startsWith('#')).join('\n')
+
+const writeResult = (body) => writeFileSync('.env', body)
+
+const lines = readFileSync('.env.example', 'utf-8').split('\n')
 
 const vars = []
 
@@ -80,5 +84,5 @@ for (let line of lines) {
 const questions = vars.map(questionize).flat(1)
 
 inquirer.prompt(questions)
-.then( ans => console.log('Inquirer result', ans))
+.then(renderData).then(writeResult)
 .catch(err => console.error('Error inside Inquirer', err))
