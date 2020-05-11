@@ -63,27 +63,23 @@ const questionize = ({ name, value, params }) => params
   ? paramissedQuestionize({ name, value, params })
   : { name, message: `${name}:`, default: defaultize(name, value), validate }
 
-const joinOnlyVars =(a, c) => c.startsWith('#') ? a : `${a}\n${c}`
-
-const renderData = (ans) =>
-  Object.entries(ans).map(([key, val]) => `${key}=${val}`).reduce(joinOnlyVars)
+const renderData = (vars, ans) =>
+  vars.map(({ name }) => `${name}=${ans[name]}`).join('\n')
 
 const writeResult = (body) => writeFileSync('.env', body)
 
 const lines = readFileSync('.env.example', 'utf-8').split('\n')
 
-const vars = []
-
-for (let line of lines) {
+const vars = lines.reduce((a, line) => {
   let name = extractVarName(line)
-  if (!name) continue
+  if (!name) return a
   let value = extractVarValue(line)
   let params = extractVarParams(line)
-  vars.push({name, value, params})
-}
+  return [...a, { name, value, params }]
+}, [])
 
 const questions = vars.map(questionize).flat(1)
 
 inquirer.prompt(questions)
-.then(renderData).then(writeResult)
+.then(ans => renderData(vars, ans)).then(writeResult)
 .catch(err => console.error('Error inside Inquirer', err))
