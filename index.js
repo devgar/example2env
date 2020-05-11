@@ -56,7 +56,6 @@ const paramissedQuestionize = ({ name, value, params }) => [
   paramissedResultQuestionize({ name, value, params })
 ]
 
-
 const paramissedResultQuestionize = ({ name, value, params }) =>
   ({ name, message: `${name}:`, default: paramissedDefaultize(name, value, params)})
 
@@ -64,8 +63,10 @@ const questionize = ({ name, value, params }) => params
   ? paramissedQuestionize({ name, value, params })
   : { name, message: `${name}:`, default: defaultize(name, value), validate }
 
+const joinOnlyVars =(a, c) => c.startsWith('#') ? a : `${a}\n${c}`
+
 const renderData = (ans) =>
-  Object.entries(ans).map(([key, val]) => `${key}=${val}`).filter(l => !l.startsWith('#')).join('\n')
+  Object.entries(ans).map(([key, val]) => `${key}=${val}`).reduce(joinOnlyVars)
 
 const writeResult = (body) => writeFileSync('.env', body)
 
