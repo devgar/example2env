@@ -8,6 +8,7 @@
   "author": "Edgar Albalate <dev.gardo@gmail.com>",
   "license": "MIT",
   "scripts": {
+    "prepare": "npm run build",
     "build": "esbuild src/index.js --outfile=bin/index.js --target=es6"
   },
   "dependencies": {
