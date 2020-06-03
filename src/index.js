@@ -78,7 +78,7 @@ const vars = lines.reduce((a, line) => {
   return [...a, { name, value, params }]
 }, [])
 
-const questions = vars.map(questionize).flat(1)
+const questions = [].concat(...vars.map(questionize))
 
 inquirer.prompt(questions)
 .then(ans => renderData(vars, ans)).then(writeResult)
