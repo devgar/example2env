@@ -2,13 +2,19 @@
   "name": "example2env",
   "version": "0.3.2",
   "description": "A .env file generator using .env.example as template",
-  "bin": "index.js",
-  "main": "index.js",
+  "bin": "bin/index.js",
+  "main": "src/index.js",
   "repository": "https://github.com/devgar/example2env",
   "author": "Edgar Albalate <dev.gardo@gmail.com>",
   "license": "MIT",
+  "scripts": {
+    "build": "esbuild src/index.js --outfile=bin/index.js --target=es6"
+  },
   "dependencies": {
     "inquirer": "^7.1.0",
     "yargs": "^15.3.1"
+  },
+  "devDependencies": {
+    "esbuild": "^0.4.3"
   }
 }
