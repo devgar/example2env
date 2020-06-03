@@ -3,13 +3,13 @@
   "version": "0.4.0",
   "description": "A .env file generator using .env.example as template",
   "bin": "bin/index.js",
-  "main": "src/index.js",
+  "main": "bin/index.js",
   "repository": "https://github.com/devgar/example2env",
   "author": "Edgar Albalate <dev.gardo@gmail.com>",
   "license": "MIT",
   "scripts": {
     "prepare": "npm run build",
-    "build": "esbuild src/index.js --outfile=bin/index.js --target=es6"
+    "build": "esbuild --minify src/index.js --outfile=bin/index.js --target=es6"
   },
   "dependencies": {
     "inquirer": "^7.1.0",
