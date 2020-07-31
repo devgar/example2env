@@ -4,7 +4,7 @@ const getUri = require('get-uri')
 const got = require('got')
 
 const PromiseSome = (promises) => Promise.allSettled(promises)
-  .then(r => console.log(r.map(r_ => r_.status)) || r)
+  // .then(r => console.log(r.map(r_ => r_.status)) || r)
   .then(r => {
     const f = r.find(r_ => r_.status === 'fulfilled')
     if (!f) throw r[0].reason
@@ -26,7 +26,7 @@ const gh = (repo, branch = 'master', file = '.env.example') =>
   `${GH_RAW_URL}/${repo}/${branch}/${file}`
 
 const getGithubDefaultBranch = repo => {
-  console.log(`-- Fetching https://api.github.com/repos/${repo}`)
+  // console.log(`-- Fetching https://api.github.com/repos/${repo}`)
   return got(`https://api.github.com/repos/${repo}`)
     .then(res => JSON.parse(res.body))
     .then(obj => obj.default_branch)
