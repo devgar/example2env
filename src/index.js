@@ -2,52 +2,42 @@
 
 'use strict';
 
-const { readFileSync, writeFileSync } = require('fs')
+const { writeFileSync } = require('fs')
+const getStream = require('./getStream')
+const parse = require('./parse')
+
+const { Readable } = require('stream') 
 
 const inquirer = require('inquirer')
 
-const var_name_regex = /^(?:EXPORT )?(\w+)(?:\=)/i
-const var_value_regex = /^(?:EXPORT )?(?:\w+)(?:\=)([^#]+)?/i
-const var_param_regex = /\${(\w+)}/g
-
 const prefix = '?   '
 
-const parametrize = (param) => 
-  ({ param, name: param.match(/\${(\w+)}/)[1] })
-
-const extractVarName = (str) => 
-  str.match(var_name_regex)?.[1]?.trim()
-const extractVarValue = (str) => 
-  (str.match(var_value_regex)?.[1] || '')?.trim()
-const extractVarParams = (str) => 
-  str.match(var_param_regex)?.map(parametrize)
-
-const defaultize = (name, value) => (ans) => 
+const defaultize = (name, value) => ans =>
   ans[name] || process.env[name] || value
 
-const paramsReduction = (ans) => (a, {param, name}) => 
+const paramsReduction = ans => (a, {param, name}) =>
   a.replace(param, ans[name])
 
-const paramissedDefaultize = (name, value, params) => (ans) => 
+const paramissedDefaultize = (name, value, params) => ans =>
   ans[`#${name}`] && params.every(({ name }) => ans[name])
     ? params.reduce(paramsReduction(ans), value)
     : value
 
-const validate = (input) => !!input
+const validate = input => !!input
 
-const paramissedMessage = ({ name, params }) => (ans) =>
+const paramissedMessage = ({ name, params }) => ans =>
   `Complete «${name}» using its defined params?`
 
 const confirmQuestionize = ({ name, params }) => ({
   type: 'confirm',
-  name: `#${name}`, 
+  name: `#${name}`,
   message: paramissedMessage({ name, params}),
   default: true
 })
 
-const whenize = (parent) => parent && ((ans) => ans[`#${parent}`])
+const whenize = parent => parent && (ans => ans[`#${parent}`])
 
-const optionalQuestionize = (parent) => ({ name }) =>
+const optionalQuestionize = parent => ({ name }) =>
   ({ ...questionize({ name }), prefix: `? ${parent}`, when: whenize(parent) })
 
 const paramissedQuestionize = ({ name, value, params }) => [
@@ -66,20 +56,16 @@ const questionize = ({ name, value, params }) => params
 const renderData = (vars, ans) =>
   vars.map(({ name }) => `${name}=${ans[name]}`).join('\n')
 
-const writeResult = (body) => writeFileSync('.env', body)
+const writeResult = body => writeFileSync('.env', body)
 
-const lines = readFileSync('.env.example', 'utf-8').split('\n')
+const p = process.argv[2] || ''
 
-const vars = lines.reduce((a, line) => {
-  let name = extractVarName(line)
-  if (!name) return a
-  let value = extractVarValue(line)
-  let params = extractVarParams(line)
-  return [...a, { name, value, params }]
-}, [])
-
-const questions = [].concat(...vars.map(questionize))
-
-inquirer.prompt(questions)
-.then(ans => renderData(vars, ans)).then(writeResult)
-.catch(err => console.error('Error inside Inquirer', err))
+getStream(p)
+  .then(stream => parse(stream))
+  .then(vars => 
+    Promise.all([vars, [].concat(...vars.map(questionize))]))
+  .then(([vars, questions]) => 
+    Promise.all([vars, inquirer.prompt(questions)]))
+  .then(([vars, ans]) => renderData(vars, ans))
+  .then(body => writeResult(body))
+  .catch(err => console.error('Error inside Inquirer', err))

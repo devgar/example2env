@@ -12,6 +12,8 @@
     "build": "esbuild --minify src/index.js --outfile=bin/index.js --target=es6"
   },
   "dependencies": {
+    "get-uri": "^3.0.2",
+    "got": "^11.5.1",
     "inquirer": "^7.1.0",
     "yargs": "^15.3.1"
   },
