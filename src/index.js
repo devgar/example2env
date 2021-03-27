@@ -1,57 +1,15 @@
 #!/usr/bin/env node
 
-'use strict';
+'use strict'
 
 const { writeFileSync } = require('fs')
 const getStream = require('./getStream')
 const parse = require('./parse')
-
-const { Readable } = require('stream') 
+const questionize = require('./questionize')
 
 const inquirer = require('inquirer')
 
 const prefix = '?   '
-
-const defaultize = (name, value) => ans =>
-  ans[name] || process.env[name] || value
-
-const paramsReduction = ans => (a, {param, name}) =>
-  a.replace(param, ans[name])
-
-const paramissedDefaultize = (name, value, params) => ans =>
-  ans[`#${name}`] && params.every(({ name }) => ans[name])
-    ? params.reduce(paramsReduction(ans), value)
-    : value
-
-const validate = input => !!input
-
-const paramissedMessage = ({ name, params }) => ans =>
-  `Complete «${name}» using its defined params?`
-
-const confirmQuestionize = ({ name, params }) => ({
-  type: 'confirm',
-  name: `#${name}`,
-  message: paramissedMessage({ name, params}),
-  default: true
-})
-
-const whenize = parent => parent && (ans => ans[`#${parent}`])
-
-const optionalQuestionize = parent => ({ name }) =>
-  ({ ...questionize({ name }), prefix: `? ${parent}`, when: whenize(parent) })
-
-const paramissedQuestionize = ({ name, value, params }) => [
-  confirmQuestionize({ name, value, params }),
-  ...params.map(optionalQuestionize(name)),
-  paramissedResultQuestionize({ name, value, params })
-]
-
-const paramissedResultQuestionize = ({ name, value, params }) =>
-  ({ name, message: `${name}:`, default: paramissedDefaultize(name, value, params)})
-
-const questionize = ({ name, value, params }) => params
-  ? paramissedQuestionize({ name, value, params })
-  : { name, message: `${name}:`, default: defaultize(name, value), validate }
 
 const renderData = (vars, ans) =>
   vars.map(({ name }) => `${name}=${ans[name]}`).join('\n')
@@ -68,4 +26,4 @@ getStream(p)
     Promise.all([vars, inquirer.prompt(questions)]))
   .then(([vars, ans]) => renderData(vars, ans))
   .then(body => writeResult(body))
-  .catch(err => console.error('Error inside Inquirer', err))
+  .catch(err => console.error(err))
