@@ -15,7 +15,7 @@ const PromiseSome = (promises) => Promise.allSettled(promises)
 const base = 'file:' + process.cwd()
 const GH_RAW_URL = 'https://raw.githubusercontent.com/'
 
-const isDir = path => statSync(path).isDirectory()
+const isDir = path => statSync(path, { throwIfNoEntry: false })?.isDirectory()
 
 const getDir = pathname => PromiseSome([
     getUri('file:' + resolve(pathname, '.env.example')),
@@ -40,9 +40,10 @@ const getGithub = repo => getGithubDefaultBranch(repo)
   ]))
   .catch(err => { throw err })
 
-module.exports =  (u = '') => {
+// async so that a bad url or an unreadable path rejects instead of throwing
+// synchronously, which used to escape the caller's .catch entirely.
+module.exports = async (u = '') => {
   const { href, protocol, pathname } = new URL(u, base)
-  if (!protocol) throw new Error('Invalid Url')
   if (['github:','gh:'].includes(protocol))
     return getGithub(pathname)
   if ('file:' === protocol && isDir(pathname))
