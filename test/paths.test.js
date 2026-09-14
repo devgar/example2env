@@ -27,8 +27,8 @@ const readFrom = (cwd, arg) => new Promise(done => {
 
 // A working directory holding its own .env.example, plus a sub/ holding
 // another. Reading the wrong one is the bug, so they must be distinguishable.
-const scratch = async () => {
-  const cwd = await mkdtemp(join(tmpdir(), 'example2env-paths-'))
+const scratch = async (prefix = 'example2env-paths-') => {
+  const cwd = await mkdtemp(join(tmpdir(), prefix))
   await writeFile(join(cwd, '.env.example'), 'FROM=root\n')
   await mkdir(join(cwd, 'sub'))
   await writeFile(join(cwd, 'sub', '.env.example'), 'FROM=sub\n')
@@ -58,4 +58,26 @@ test('no argument reads the working directory itself', async () => {
 test('an absolute path is still honoured', async () => {
   const cwd = await scratch()
   assert.match((await readFrom(cwd, join(cwd, 'sub'))).stdout, /FROM=sub/)
+})
+
+// URL.pathname is percent-encoded, so anything that reaches fs or path has to
+// be decoded first.
+test('works from a directory whose name contains a space', async () => {
+  const cwd = await scratch('example2env has space-')
+  assert.match((await readFrom(cwd, '')).stdout, /FROM=root/)
+})
+
+test('resolves a relative path from a directory containing a space', async () => {
+  const cwd = await scratch('example2env has space-')
+  assert.match((await readFrom(cwd, './sub')).stdout, /FROM=sub/)
+})
+
+test('reads a file given a relative path containing a space', async () => {
+  const cwd = await scratch('example2env has space-')
+  assert.match((await readFrom(cwd, './sub/.env.example')).stdout, /FROM=sub/)
+})
+
+test('works from a directory with a non-ascii name', async () => {
+  const cwd = await scratch('example2env-cañón-')
+  assert.match((await readFrom(cwd, './sub')).stdout, /FROM=sub/)
 })

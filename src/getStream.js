@@ -2,7 +2,7 @@
 
 const { statSync } = require('fs')
 const { resolve } = require('path')
-const { pathToFileURL } = require('url')
+const { pathToFileURL, fileURLToPath } = require('url')
 const getUri = require('get-uri')
 const got = require('got')
 
@@ -21,11 +21,10 @@ const GH_RAW_URL = 'https://raw.githubusercontent.com/'
 
 const isDir = path => statSync(path, { throwIfNoEntry: false })?.isDirectory()
 
-const getDir = pathname => PromiseSome([
-    getUri('file:' + resolve(pathname, '.env.example')),
-    getUri('file:' + resolve(pathname, '.env'))
+const getDir = dir => PromiseSome([
+    getUri(pathToFileURL(resolve(dir, '.env.example')).href),
+    getUri(pathToFileURL(resolve(dir, '.env')).href)
   ])
-  .catch(err => { throw err })
 
 const gh = (repo, branch = 'master', file = '.env.example') =>
   `${GH_RAW_URL}/${repo}/${branch}/${file}`
@@ -50,7 +49,11 @@ module.exports = async (u = '') => {
   const { href, protocol, pathname } = new URL(u, base)
   if (['github:','gh:'].includes(protocol))
     return getGithub(pathname)
-  if ('file:' === protocol && isDir(pathname))
-    return getDir(pathname)
+  // pathname is percent-encoded, so it has to be decoded before it reaches
+  // fs or path; get-uri decodes the href itself.
+  if ('file:' === protocol) {
+    const path = fileURLToPath(href)
+    if (isDir(path)) return getDir(path)
+  }
   return getUri(href)
 }
