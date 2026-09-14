@@ -2,6 +2,7 @@
 
 const { statSync } = require('fs')
 const { resolve } = require('path')
+const { pathToFileURL, fileURLToPath } = require('url')
 const getUri = require('get-uri')
 const got = require('got')
 
@@ -12,16 +13,18 @@ const PromiseSome = (promises) => Promise.allSettled(promises)
     return f.value
   })
 
-const base = 'file:' + process.cwd()
+// The trailing slash matters: without it the URL parser treats the last
+// path segment as a file name and drops it, so a relative argument used to
+// resolve against the parent directory instead of the current one.
+const base = pathToFileURL(process.cwd()).href + '/'
 const GH_RAW_URL = 'https://raw.githubusercontent.com/'
 
 const isDir = path => statSync(path, { throwIfNoEntry: false })?.isDirectory()
 
-const getDir = pathname => PromiseSome([
-    getUri('file:' + resolve(pathname, '.env.example')),
-    getUri('file:' + resolve(pathname, '.env'))
+const getDir = dir => PromiseSome([
+    getUri(pathToFileURL(resolve(dir, '.env.example')).href),
+    getUri(pathToFileURL(resolve(dir, '.env')).href)
   ])
-  .catch(err => { throw err })
 
 const gh = (repo, branch = 'master', file = '.env.example') =>
   `${GH_RAW_URL}/${repo}/${branch}/${file}`
@@ -46,7 +49,11 @@ module.exports = async (u = '') => {
   const { href, protocol, pathname } = new URL(u, base)
   if (['github:','gh:'].includes(protocol))
     return getGithub(pathname)
-  if ('file:' === protocol && isDir(pathname))
-    return getDir(pathname)
+  // pathname is percent-encoded, so it has to be decoded before it reaches
+  // fs or path; get-uri decodes the href itself.
+  if ('file:' === protocol) {
+    const path = fileURLToPath(href)
+    if (isDir(path)) return getDir(path)
+  }
   return getUri(href)
 }
