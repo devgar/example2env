@@ -1,0 +1,54 @@
+name: Publish to npm
+
+on:
+  release:
+    types: [published]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      # Required for npm Trusted Publishing (OIDC). Without it npm cannot
+      # exchange a workflow identity for a short-lived publish credential.
+      id-token: write
+
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+          registry-url: https://registry.npmjs.org
+
+      # Trusted Publishing needs npm >= 11.5.1, newer than the npm bundled
+      # with most Node releases.
+      - name: Update npm
+        run: npm install -g npm@latest
+
+      # The repo is locked with a yarn v1 lockfile, so there is no
+      # package-lock.json for `npm ci` to read.
+      - name: Install dependencies
+        run: npx --yes yarn@1.22.22 install --frozen-lockfile
+
+      - name: Test
+        run: npx jest
+
+      - name: Check the release tag matches package.json
+        if: github.event_name == 'release'
+        run: |
+          tag="${GITHUB_REF_NAME#v}"
+          pkg="$(node -p "require('./package.json').version")"
+          if [ "$tag" != "$pkg" ]; then
+            echo "Release tag $tag does not match package.json version $pkg" >&2
+            exit 1
+          fi
+
+      # No NODE_AUTH_TOKEN: the OIDC credential is resolved by npm itself,
+      # and provenance is attached automatically.
+      - name: Publish
+        run: npm publish --access public
