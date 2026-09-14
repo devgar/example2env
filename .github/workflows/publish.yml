@@ -20,10 +20,13 @@ jobs:
     steps:
       - uses: actions/checkout@v7
 
+      # No registry-url on purpose: it makes setup-node write an .npmrc
+      # containing ${NODE_AUTH_TOKEN}, which yarn then fails to expand
+      # because Trusted Publishing sets no token. npm publish defaults to
+      # registry.npmjs.org regardless.
       - uses: actions/setup-node@v7
         with:
           node-version: 22
-          registry-url: https://registry.npmjs.org
 
       # Trusted Publishing needs npm >= 11.5.1, newer than the npm bundled
       # with most Node releases.
