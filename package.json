@@ -15,7 +15,7 @@
   "scripts": {
     "prepare": "npm run build",
     "build": "esbuild --minify src/*.js --outdir=bin --target=es6 --platform=node",
-    "test": "jest"
+    "test": "node --test"
   },
   "dependencies": {
     "get-uri": "^3.0.2",
@@ -24,7 +24,6 @@
     "yargs": "^15.3.1"
   },
   "devDependencies": {
-    "esbuild": "^0.28.2",
-    "jest": "^26.2.2"
+    "esbuild": "^0.28.2"
   }
 }
