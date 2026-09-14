@@ -26,4 +26,7 @@ getStream(p)
     Promise.all([vars, inquirer.prompt(questions)]))
   .then(([vars, ans]) => renderData(vars, ans))
   .then(body => writeResult(body))
-  .catch(err => console.error(err))
+  .catch(err => {
+    console.error(err.message || err)
+    process.exitCode = 1
+  })
