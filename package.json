@@ -6,6 +6,9 @@
     "example2env": "bin/index.js"
   },
   "main": "bin/index.js",
+  "files": [
+    "bin"
+  ],
   "repository": "https://github.com/devgar/example2env",
   "author": "Edgar Albalate <dev.gardo@gmail.com>",
   "license": "MIT",
@@ -21,7 +24,7 @@
     "yargs": "^15.3.1"
   },
   "devDependencies": {
-    "esbuild": "^0.4.3",
+    "esbuild": "^0.28.2",
     "jest": "^26.2.2"
   }
 }
