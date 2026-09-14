@@ -2,6 +2,7 @@
 
 const { statSync } = require('fs')
 const { resolve } = require('path')
+const { pathToFileURL } = require('url')
 const getUri = require('get-uri')
 const got = require('got')
 
@@ -12,7 +13,10 @@ const PromiseSome = (promises) => Promise.allSettled(promises)
     return f.value
   })
 
-const base = 'file:' + process.cwd()
+// The trailing slash matters: without it the URL parser treats the last
+// path segment as a file name and drops it, so a relative argument used to
+// resolve against the parent directory instead of the current one.
+const base = pathToFileURL(process.cwd()).href + '/'
 const GH_RAW_URL = 'https://raw.githubusercontent.com/'
 
 const isDir = path => statSync(path, { throwIfNoEntry: false })?.isDirectory()
