@@ -38,8 +38,9 @@ jobs:
       - name: Install dependencies
         run: npx --yes yarn@1.22.22 install --frozen-lockfile
 
+      # Use the package's own script, so this cannot drift from it again.
       - name: Test
-        run: npx jest
+        run: npm test
 
       - name: Check the release tag matches package.json
         if: github.event_name == 'release'
